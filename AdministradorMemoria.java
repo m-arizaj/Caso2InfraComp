@@ -61,29 +61,35 @@ public class AdministradorMemoria {
     static void generarReferencias() {
         Scanner scanner = new Scanner(System.in);
         System.out.print("Ingrese el tamaño de la página: ");
-        int tamañoPagina = scanner.nextInt();
+        int tamanoPagina = scanner.nextInt();
+        System.out.println(tamanoPagina);
         System.out.print("Ingrese el número de filas de la matriz de datos: ");
         int nf = scanner.nextInt();
+        System.out.println(nf);
         int nc = nf;
 
-        int paginasFiltro = calcularPaginas(nf, nc, tamañoPagina);
-        int paginasDatos = calcularPaginas(nf, nc, tamañoPagina);
-        int paginasResultado = calcularPaginas(nf, nc, tamañoPagina);
+        int paginasFiltro = calcularPaginas(nf, nc, tamanoPagina);
+        int paginasDatos = calcularPaginas(nf, nc, tamanoPagina);
+        int paginasResultado = calcularPaginas(nf, nc, tamanoPagina);
 
         int totalReferencias = nf * nc * 3; // Tres matrices: filtro, datos y resultado
         int totalPaginas = paginasFiltro + paginasDatos + paginasResultado;
         try {
             PrintWriter writer = new PrintWriter(new File("referencias.txt"));
-            writer.println("TP:" + tamañoPagina + " NF:" + nf + " NC:" + nc + " NR:" + totalReferencias + " NP:" + totalPaginas);
+            writer.println("TP: " + tamanoPagina);
+            writer.println("NF: " + nf);
+            writer.println("NC: " + nc);
+            writer.println("NR: " + totalReferencias);
+            writer.println("NP: " + totalPaginas);
 
             // Generar referencias para el filtro
-            generarReferenciasMatriz(3, 3, tamañoPagina, 0, writer);
+            generarReferenciasMatriz(3, 3, tamanoPagina, 0, writer);
 
             // Generar referencias para los datos
-            generarReferenciasMatriz(nf, nc, tamañoPagina, paginasFiltro, writer);
+            generarReferenciasMatriz(nf, nc, tamanoPagina, paginasFiltro, writer);
 
             // Generar referencias para el resultado
-            generarReferenciasMatriz(nf, nc, tamañoPagina, paginasFiltro + paginasDatos, writer);
+            generarReferenciasMatriz(nf, nc, tamanoPagina, paginasFiltro + paginasDatos, writer);
 
             writer.close();
             System.out.println("Referencias generadas y guardadas en referencias.txt");
@@ -246,7 +252,8 @@ public class AdministradorMemoria {
             for (int j = 0; j < nc; j++) {
                 int pagina = paginaActual + (i * nc + j) / elementosPorPagina;
                 int offset = (i * nc + j) % elementosPorPagina;
-                writer.println("Referencia " + referencia++ + ": Página " + pagina + ", Offset " + offset);
+                String action = "R"; // toca cambiar esto porque pues no siempre se lee
+                writer.println("Matriz[" + i + "][" + j + "]," + pagina + "," + offset + "," + action);
             }
         }
     }
