@@ -68,11 +68,11 @@ public class AdministradorMemoria {
         System.out.println(nf);
         int nc = nf;
 
-        int paginasFiltro = calcularPaginas(nf, nc, tamanoPagina);
+        int paginasFiltro = calcularPaginas(3, 3, tamanoPagina);
         int paginasDatos = calcularPaginas(nf, nc, tamanoPagina);
         int paginasResultado = calcularPaginas(nf, nc, tamanoPagina);
 
-        int totalReferencias = nf * nc * 3; // Tres matrices: filtro, datos y resultado
+        int totalReferencias = nf*nc*3; // Tres matrices: filtro, datos y resultado
         int totalPaginas = paginasFiltro + paginasDatos + paginasResultado;
         try {
             PrintWriter writer = new PrintWriter(new File("referencias.txt"));
@@ -81,15 +81,23 @@ public class AdministradorMemoria {
             writer.println("NC: " + nc);
             writer.println("NR: " + totalReferencias);
             writer.println("NP: " + totalPaginas);
+            
+            int[][] matrizDatos = new int[nf][nc];
+            int[][] matrizFiltro = new int[3][3];
+
+            String rep ="";          
+            rep += aplicarFiltro(matrizDatos, matrizFiltro, nf, nc);
+            writer.println(rep);
+
 
             // Generar referencias para el filtro
-            generarReferenciasMatriz(3, 3, tamanoPagina, 0, writer);
+            // generarReferenciasMatriz(3, 3, tamanoPagina, 0, writer);
 
-            // Generar referencias para los datos
-            generarReferenciasMatriz(nf, nc, tamanoPagina, paginasFiltro, writer);
+            // // Generar referencias para los datos
+            // generarReferenciasMatriz(nf, nc, tamanoPagina, paginasFiltro, writer);
 
-            // Generar referencias para el resultado
-            generarReferenciasMatriz(nf, nc, tamanoPagina, paginasFiltro + paginasDatos, writer);
+            // // Generar referencias para el resultado
+            // generarReferenciasMatriz(nf, nc, tamanoPagina, paginasFiltro + paginasDatos, writer);
 
             writer.close();
             System.out.println("Referencias generadas y guardadas en referencias.txt");
@@ -256,5 +264,58 @@ public class AdministradorMemoria {
                 writer.println("Matriz[" + i + "][" + j + "]," + pagina + "," + offset + "," + action);
             }
         }
+    }
+
+    public static String aplicarFiltro(int[][] matrizDatos, int[][] matrizFiltro, int nf, int nc) {
+        String reporte = "";
+        
+        int[][] matrizResultado = new int[nf][nc];
+
+        //agregar los primeros parametros del reporte
+
+        for (int i = 1; i < nf - 1; i++) {
+            for (int j = 1; j < nc - 1; j++) {
+                int acum = 0;
+                for (int a = -1; a <= 1; a++) {
+                    for (int b = -1; b <= 1; b++) {
+                        int i2 = i + a;
+                        int j2 = j + b;
+                        int i3 = 1 + a;
+                        int j3 = 1 + b;
+                        acum += (matrizFiltro[i3][j3] * matrizDatos[i2][j2]);
+
+                        int offsetDatos = 4+(j2*4);
+                        int virpageDatos = 1+i2;
+                        int offsetFiltro = 4+((j3-1)*4);
+                        int virpageFiltro = 1+(i3-1);
+                        reporte += "M["+i2+"]["+j2+"],"+virpageDatos+","+offsetDatos+",R \n";
+                        reporte += "F["+i3+"]["+j3+"],"+virpageFiltro+","+offsetFiltro+",R \n";
+                    }
+                
+                }
+                if (acum >= 0 && acum <= 255)
+                    matrizResultado[i][j] = acum;
+                else if (acum < 0)
+                    matrizResultado[i][j] = 0;
+                else {
+                    matrizResultado[i][j] = 255;}
+                int off = acum + 1;
+                reporte += "R["+i+"]["+j+"],"+acum+","+off+",W \n";
+            }
+
+        }
+
+        // Asignar valores predefinidos a los bordes
+        for (int i = 0; i < nc; i++) {
+            matrizResultado[0][i] = 0;
+            matrizResultado[nf - 1][i] = 255;
+        }
+        for (int i = 1; i < nf - 1; i++) {
+            matrizResultado[i][0] = 0;
+            matrizResultado[i][nc - 1] = 255;
+        }
+
+        return reporte;
+
     }
 }
