@@ -72,7 +72,7 @@ public class AdministradorMemoria {
         int paginasDatos = calcularPaginas(nf, nc, tamanoPagina);
         int paginasResultado = calcularPaginas(nf, nc, tamanoPagina);
 
-        int totalReferencias = nf*nc*3; // Tres matrices: filtro, datos y resultado
+        int totalReferencias = 4*9*(nf-2)+(nf*nc); // Tres matrices: filtro, datos y resultado
         int totalPaginas = paginasFiltro + paginasDatos + paginasResultado;
         try {
             PrintWriter writer = new PrintWriter(new File("referencias.txt"));
@@ -86,7 +86,7 @@ public class AdministradorMemoria {
             int[][] matrizFiltro = new int[3][3];
 
             String rep ="";          
-            rep += aplicarFiltro(matrizDatos, matrizFiltro, nf, nc);
+            rep += aplicarFiltro(matrizDatos, matrizFiltro, nf, nc, tamanoPagina);
             writer.println(rep);
 
 
@@ -266,16 +266,19 @@ public class AdministradorMemoria {
         }
     }
 
-    public static String aplicarFiltro(int[][] matrizDatos, int[][] matrizFiltro, int nf, int nc) {
+    public static String aplicarFiltro(int[][] matrizDatos, int[][] matrizFiltro, int nf, int nc, int tamanoPagina) {
         String reporte = "";
+        int numtp = tamanoPagina/4;
         
         int[][] matrizResultado = new int[nf][nc];
 
         //agregar los primeros parametros del reporte
-
+        
         for (int i = 1; i < nf - 1; i++) {
             for (int j = 1; j < nc - 1; j++) {
                 int acum = 0;
+                int x = 0;
+                int y = 0;
                 for (int a = -1; a <= 1; a++) {
                     for (int b = -1; b <= 1; b++) {
                         int i2 = i + a;
@@ -285,34 +288,45 @@ public class AdministradorMemoria {
                         acum += (matrizFiltro[i3][j3] * matrizDatos[i2][j2]);
 
                         int offsetDatos = 4+(j2*4);
-                        int virpageDatos = 1+i2;
-                        int offsetFiltro = 4+((j3-1)*4);
+                        int virpageDatos = (numtp/2)+i2;
                         int virpageFiltro = 1+(i3-1);
+                        
+                        System.out.println("j3:"+j3);
+                        System.out.println("x:"+(x*4));
                         reporte += "M["+i2+"]["+j2+"],"+virpageDatos+","+offsetDatos+",R \n";
-                        reporte += "F["+i3+"]["+j3+"],"+virpageFiltro+","+offsetFiltro+",R \n";
+                        reporte += "F["+i3+"]["+j3+"],"+y+","+(x*4)+",R \n";
+                        if((x*4)==(tamanoPagina-4)) y++;
+                        if((x*4)<(tamanoPagina-4)) x++;
+                        else x=0;
+                        
                     }
-                
                 }
+                
                 if (acum >= 0 && acum <= 255)
                     matrizResultado[i][j] = acum;
                 else if (acum < 0)
                     matrizResultado[i][j] = 0;
                 else {
                     matrizResultado[i][j] = 255;}
-                int off = acum + 1;
-                reporte += "R["+i+"]["+j+"],"+acum+","+off+",W \n";
+                int off = (j * 4)+ 4;
+                int vpres = (numtp/2)+i;
+                reporte += "R["+i+"]["+j+"],"+vpres+","+off+",W \n";
+            
             }
-
         }
 
         // Asignar valores predefinidos a los bordes
         for (int i = 0; i < nc; i++) {
             matrizResultado[0][i] = 0;
             matrizResultado[nf - 1][i] = 255;
+            reporte += "R[0]["+i+"],0,"+(4+(i*4))+",W \n";
+            reporte += "R["+(nf - 1)+"]["+i+"],255,"+(4+(i*4))+",W \n";
         }
         for (int i = 1; i < nf - 1; i++) {
             matrizResultado[i][0] = 0;
             matrizResultado[i][nc - 1] = 255;
+            reporte += "R["+i+"][0],0,"+4+",W \n";
+            reporte += "R["+i+"]["+(nc - 1)+"],255,"+16+",W \n";
         }
 
         return reporte;
